@@ -3,12 +3,15 @@ var util = require('util'),
     https = require('https');
 
 exports.handler = function(event, context) {
+    
     var uri = '',
+        callbackUri = 'thefilmnetwork.stage.aerian.com',
         cmd,
         curl;
+    
     function callbackPost(data) {
+        
         var post_data = JSON.stringify(data), // build the post body
-            callbackUri = 'www.aerian.com',
             post_options = { // An object of options to indicate where to post to
                 host: callbackUri,
                 port: '443',
@@ -31,10 +34,9 @@ exports.handler = function(event, context) {
         // post the data
         post_req.write(post_data);
         post_req.end();
+        
         context.succeed('Checked headers of: ' + uri + ' and sent results to: ' + callbackUri);
     }
-
-
 
     if (!event.uri || event.uri === "$input.params('uri')") {
         console.log('uri not set from params, running in test mode... (www.aerian.com)');
@@ -50,22 +52,7 @@ exports.handler = function(event, context) {
         context.fail('Invalid URI:' + uri);
     }
     
-
-    curl = exec(cmd);
-
-    success = function(data) {
-        // @todo write to 'Reciever API'
-        //doPost(req, context.succeed);
-        callbackPost(data);
-        //context.succeed(data);
-    };
-
-    fail = function(data) {
-        // @todo write to 'Reciever API'
-        context.fail('Failed:' + data);
-    };
-
-    // Log process stdout and stderr
-    curl.stdout.on('data', success);
-    curl.stderr.on('data', fail);
+    curl = exec(cmd, callbackPost);
+    
+    //context.succeed('Process will check headers of: ' + uri + ' and sent results to: ' + callbackUri);
 };
